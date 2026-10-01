@@ -1,0 +1,83 @@
+name: Refresh Scholar stats and deploy site
+
+# One workflow does both jobs, so every deployment ships the latest citation numbers:
+#   1. fetch Google Scholar metrics into data/scholar.js (and save them to the repo if they changed)
+#   2. publish the site to GitHub Pages
+# Only the public website files are published. The analytics/ server code and scripts/ stay in the repository.
+# Requires: Settings > Pages > Build and deployment > Source = "GitHub Actions".
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 */6 * * *"   # every 6 hours; the site is redeployed only when the numbers change
+  workflow_dispatch:         # "Run workflow" button in the Actions tab
+
+permissions:
+  contents: write            # save data/scholar.js back to the repo
+  pages: write               # deploy to GitHub Pages
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      changed: ${{ steps.save.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch Google Scholar metrics
+        env:
+          # Optional fallback if Google blocks the direct request: add a free serpapi.com
+          # key as a repository secret named SERPAPI_KEY.
+          SERPAPI_KEY: ${{ secrets.SERPAPI_KEY }}
+        run: python scripts/update_scholar.py
+
+      - name: Save updated numbers to the repository
+        id: save
+        run: |
+          if git diff --quiet -- data/scholar.js; then
+            echo "No changes to save."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/scholar.js
+          git commit -m "Update Google Scholar stats"
+          git push || echo "::warning::Could not push data/scholar.js; the deployed site still has the new numbers."
+
+      - name: Collect the public website files
+        if: github.event_name != 'schedule' || steps.save.outputs.changed == 'true'
+        run: |
+          mkdir -p _site
+          cp index.html RaisulKabirNews_CV.pdf .nojekyll _site/
+          cp -r assets data _site/
+
+      - if: github.event_name != 'schedule' || steps.save.outputs.changed == 'true'
+        uses: actions/configure-pages@v5
+
+      - if: github.event_name != 'schedule' || steps.save.outputs.changed == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    if: github.event_name != 'schedule' || needs.build.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
