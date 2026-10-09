@@ -888,6 +888,58 @@ html:not(.js) .lab { display: none; }
 .bar span { display: block; height: 100%; width: var(--w); background: var(--frog); transform-origin: left; }
 .motion .bar span { transform: scaleX(0); transition: transform 1.1s var(--ease) .1s; }
 .motion .is-visible .bar span { transform: scaleX(1); }
+/* ---------- Skills & Expertise: each skill linked to the work that shows it ---------- */
+/* Research skills and toolkit stack on small screens and sit side by side on wide ones */
+.skills-split { display: grid; }
+.skills-split > .skills-group + .skills-group { margin-top: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem); }
+@media (min-width: 64em) {
+  .skills-split { grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); column-gap: clamp(2rem, 1rem + 2vw, 3.5rem); align-items: start; }
+  .skills-split > .skills-group + .skills-group { margin-top: 0; }
+}
+#skills .group-title { margin-bottom: 0.75rem; }
+.xp-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.25rem 1.5rem; }
+.xp-hint { margin-bottom: 0.75rem; font: 400 0.78rem/1.4 var(--font-mono); color: var(--muted); }
+
+/* Research skills: name | evidence links */
+.xp-list { list-style: none; margin: 0; padding: 0; border-bottom: 1px solid var(--line); }
+.xp-row { display: grid; gap: 0.45rem 2rem; align-items: center; padding: 0.6rem 0; border-top: 1px solid var(--line); }
+.xp-name { font-size: 0.95rem; font-weight: 600; line-height: 1.4; color: var(--ink); }
+.xp-proof { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.proof {
+  display: inline-flex; align-items: center; gap: 0.4rem; min-height: 1.85rem;
+  padding: 0.18rem 0.55rem; border: 1px solid var(--line); border-radius: 0.35rem;
+  background: var(--paper); color: var(--text); text-decoration: none; white-space: nowrap;
+  font: 500 0.72rem/1.3 var(--font-mono);
+  transition: border-color .2s var(--ease), color .2s var(--ease), background-color .2s var(--ease);
+}
+.proof .icon { width: 0.9rem; height: 0.9rem; color: var(--frog-ink); }
+.proof.is-pending { border-style: dashed; border-color: var(--sage-soft); }   /* under review or in progress */
+@media (hover: hover) { .proof:hover { border-color: var(--frog); color: var(--frog-ink); background: var(--frost-soft); } }
+@media (pointer: coarse) { .proof { min-height: 2.25rem; } }
+
+/* Technical toolkit: label | plain list, no levels */
+.kit { margin: 0; display: grid; column-gap: 2.5rem; border-bottom: 1px solid var(--line); }
+.kit-row { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 1rem; align-items: baseline; padding: 0.5rem 0; border-top: 1px solid var(--line); }
+.kit dt { font: 500 0.78rem/1.5 var(--font-mono); color: var(--frog-ink); }
+.kit dd { margin: 0; font-size: 0.9rem; line-height: 1.5; color: var(--text); }
+
+/* Narrow columns: tighter rows, tool lists under their label */
+@container (max-width: 30rem) {
+  .xp-row { padding: 0.55rem 0; gap: 0.4rem; }
+  .kit-row { grid-template-columns: 1fr; gap: 0.05rem; padding: 0.45rem 0; }
+}
+/* Wide columns: one line per skill; tools in two columns */
+@container (min-width: 44rem) {
+  .xp-row { grid-template-columns: 17rem minmax(0, 1fr); }
+  .kit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kit-row:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+@supports not (container-type: inline-size) {
+  @media (min-width: 50em) {
+    .xp-row { grid-template-columns: 17rem minmax(0, 1fr); }
+    .kit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+}
 
 /* ---------- 9. Achievements ---------- */
 .ach-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, max(22rem, (100% - 1rem) / 2)), 1fr)); }
@@ -1056,6 +1108,72 @@ html:not(.js) .lab { display: none; }
   .section-tint { background: none; }
   body { background: #fff; }
 }
+
+
+
+/* ---------- Research Interests: two directions, each a small tree of topics ---------- */
+.rx-wrap { container: rx / inline-size; }
+.rx {
+  --rx-hub: 2.1rem;                          /* size of the icon each tree grows from */
+  --rx-indent: calc(var(--rx-hub) + 0.7rem); /* topics sit to the right of the trunk */
+  --rx-acc: var(--frog); --rx-soft: var(--frost);
+  position: relative; isolation: isolate;
+  display: grid; gap: 0.5rem; grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "bh" "bn" "kh" "kn";
+  padding: 0.95rem 0.9rem 1rem;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--ink) 10%, transparent) 1px, transparent 1.5px) 0 0 / 1rem 1rem,
+    var(--paper);
+}
+.rx-head.rx-build { grid-area: bh; } .rx-nodes.rx-build { grid-area: bn; }
+.rx-head.rx-break { grid-area: kh; margin-top: 0.6rem; } .rx-nodes.rx-break { grid-area: kn; }
+
+/* Wires are drawn by script into this layer, behind the content */
+.rx-wires { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; overflow: visible; pointer-events: none; }
+.rx-wire { fill: none; stroke: color-mix(in srgb, var(--rx-acc) 55%, transparent); stroke-width: 1.5; stroke-linecap: round; transition: stroke .2s var(--ease), stroke-width .2s var(--ease), opacity .2s var(--ease); }
+.rx-pulse { fill: var(--rx-acc); }
+.rx.is-focus .rx-wire:not(.is-hot) { opacity: 0.35; }
+.rx-wire.is-hot { stroke: var(--rx-acc); stroke-width: 2.25; }
+
+/* Direction headers: the icon is the root its topics hang from */
+.rx-head { display: grid; grid-template-columns: var(--rx-hub) minmax(0, 1fr); column-gap: 0.7rem; row-gap: 0.15rem; align-content: start; }
+.rx-hub {
+  grid-row: 1 / span 2; display: grid; place-items: center; width: var(--rx-hub); height: var(--rx-hub); border-radius: 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--rx-acc) 45%, transparent); background: var(--rx-soft); color: var(--rx-acc);
+}
+.rx-hub .icon { width: 1.1rem; height: 1.1rem; }
+.rx-title { grid-column: 2; font-size: 1rem; font-weight: 600; line-height: 1.3; color: var(--ink); text-wrap: balance; }
+.rx-q { grid-column: 2; font-size: 0.82rem; line-height: 1.45; color: var(--muted); text-wrap: pretty; }
+
+/* Topic nodes */
+.rx-nodes { list-style: none; margin: 0 0 0 var(--rx-indent); padding: 0; display: grid; gap: 0.4rem; }
+.rx-node {
+  display: grid; grid-template-columns: 1.7rem minmax(0, 1fr); column-gap: 0.55rem; align-items: start;
+  padding: 0.45rem 0.65rem 0.5rem 0.5rem; border: 1px solid var(--line); border-radius: 0.6rem; background: var(--paper);
+  transition: border-color .2s var(--ease), box-shadow .2s var(--ease), transform .2s var(--ease);
+}
+.rx-ic { display: grid; place-items: center; width: 1.7rem; height: 1.7rem; border-radius: 0.45rem; background: var(--rx-soft); color: var(--rx-acc); }
+.rx-ic .icon { width: 0.95rem; height: 0.95rem; }
+.rx-tx { display: grid; gap: 0.05rem; min-width: 0; }
+.rx-tx strong { font-size: 0.85rem; font-weight: 600; line-height: 1.3; color: var(--ink); }
+.rx-tx span { font-size: 0.78rem; line-height: 1.4; color: var(--muted); }
+.rx-node.is-hot { border-color: var(--rx-acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--rx-acc) 16%, transparent); }
+.motion .rx-node.is-hot { transform: translateY(-1px); }
+
+/* Wide: the two trees side by side */
+@container rx (min-width: 40rem) {
+  .rx {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto repeat(3, auto); grid-template-areas: none;
+    gap: 0.6rem 1.5rem; padding: 0.95rem 1rem 1rem;
+  }
+  .rx-head.rx-build { grid-column: 1; grid-row: 1; } .rx-head.rx-break { grid-column: 2; grid-row: 1; margin-top: 0; }
+  .rx-nodes.rx-build { grid-column: 1; grid-row: 2 / span 3; } .rx-nodes.rx-break { grid-column: 2; grid-row: 2 / span 3; }
+  /* Topics on both sides share rows, so facing nodes line up */
+  @supports (grid-template-rows: subgrid) { .rx-nodes { grid-template-rows: subgrid; } }
+}
+@media (prefers-reduced-motion: reduce) { .rx-pulse { display: none; } }
+
 </style>
 <script type="application/ld+json">
 {
@@ -1231,34 +1349,38 @@ html:not(.js) .lab { display: none; }
             <p>On the testing side, I built an <strong>agentic, property-based fuzzer</strong> that found a bug in the open-source tomlc17 parser, which the maintainer <strong>confirmed and fixed upstream</strong>. The same habit of questioning assumptions shaped my paper <strong>under review at ACM IMWUT</strong>. It uncovers hidden methodological errors, including a previously unreported data-loading bug, that explain why activity-recognition models fail across datasets.</p>
           </div>
 
+
+
           <h3 class="sub-title reveal">Research Interests</h3>
-          <ul class="interests">
-            <li class="interest reveal">
-              <span class="interest-icon" aria-hidden="true"><svg class="icon"><use href="#i-lock"/></svg></span>
-              <div><h4>Privacy-preserving federated learning</h4><p>A secure data fabric that combines federated learning with <strong>homomorphic encryption</strong> for medical image analysis, published in <strong><em>Information Fusion</em> (IF 17.4)</strong>.</p></div>
-            </li>
+          <div class="rx-wrap reveal">
+            <div class="rx">
+              <svg class="rx-wires" aria-hidden="true" focusable="false"></svg>
 
-            <li class="interest reveal">
-              <span class="interest-icon" aria-hidden="true"><svg class="icon"><use href="#i-bug"/></svg></span>
-              <div><h4>Agentic AI for software reliability</h4><p><strong>Agentic property-based testing</strong> of C code; my fuzzer found a parser defect that was <strong>confirmed and fixed upstream</strong> in tomlc17.</p></div>
-            </li>
+              <div class="rx-head rx-build">
+                <span class="rx-hub" aria-hidden="true"><svg class="icon"><use href="#i-shield"/></svg></span>
+                <h4 class="rx-title">Designing trustworthy systems</h4>
+                <p class="rx-q">Can a system protect sensitive data and prove it behaved correctly?</p>
+              </div>
+              <ul class="rx-nodes rx-build" aria-label="Designing trustworthy systems">
+                <li class="rx-node"><span class="rx-ic" aria-hidden="true"><svg class="icon"><use href="#i-lock"/></svg></span><span class="rx-tx"><strong>Privacy-preserving federated learning</strong><span>Homomorphic encryption for medical imaging</span></span></li>
+                <li class="rx-node"><span class="rx-ic" aria-hidden="true"><svg class="icon"><use href="#i-check-circle"/></svg></span><span class="rx-tx"><strong>Verifiable aggregation</strong><span>Zero-knowledge proofs for an untrusted server</span></span></li>
+                <li class="rx-node"><span class="rx-ic" aria-hidden="true"><svg class="icon"><use href="#i-eye"/></svg></span><span class="rx-tx"><strong>Explainable models</strong><span>Decisions that clinicians can inspect</span></span></li>
+              </ul>
 
-            <li class="interest reveal">
-              <span class="interest-icon" aria-hidden="true"><svg class="icon"><use href="#i-eye"/></svg></span>
-              <div><h4>Explainable AI for healthcare</h4><p><strong>Interpretable deep learning</strong> for gastrointestinal image classification on HyperKvasir, presented at <strong>IEEE ICCIT 2024</strong>.</p></div>
-            </li>
+              <div class="rx-head rx-break">
+                <span class="rx-hub" aria-hidden="true"><svg class="icon"><use href="#i-bug"/></svg></span>
+                <h4 class="rx-title">Testing systems until they break</h4>
+                <p class="rx-q">Where do a system's assumptions quietly fail?</p>
+              </div>
+              <ul class="rx-nodes rx-break" aria-label="Testing systems until they break">
+                <li class="rx-node"><span class="rx-ic" aria-hidden="true"><svg class="icon"><use href="#i-bot"/></svg></span><span class="rx-tx"><strong>Agentic property-based testing</strong><span>LLM agents that generate and refine tests</span></span></li>
+                <li class="rx-node"><span class="rx-ic" aria-hidden="true"><svg class="icon"><use href="#i-code"/></svg></span><span class="rx-tx"><strong>Fuzzing and program analysis</strong><span>Finding real defects that get fixed upstream</span></span></li>
+                <li class="rx-node"><span class="rx-ic" aria-hidden="true"><svg class="icon"><use href="#i-activity"/></svg></span><span class="rx-tx"><strong>Robustness under distribution shift</strong><span>Why models fail when the data changes</span></span></li>
+              </ul>
+            </div>
+          </div>
 
-            <li class="interest reveal" style="--d:.05s">
-              <span class="interest-icon" aria-hidden="true"><svg class="icon"><use href="#i-activity"/></svg></span>
-              <div><h4>Robustness under distribution shift</h4><p>A <strong>confound-controlled</strong> study of why human activity recognition models fail across datasets (under review at <strong>ACM IMWUT</strong>).</p></div>
-            </li>
 
-            <li class="interest reveal" style="--d:.05s">
-              <span class="interest-icon" aria-hidden="true"><svg class="icon"><use href="#i-shield"/></svg></span>
-              <div><h4>Verifiable federated aggregation</h4><p><strong>Zero-knowledge proofs</strong> that let clients confirm an untrusted server aggregated honestly, without revealing their updates (zk-FedMax, in progress).</p></div>
-            </li>
- 
-          </ul>
 
           <div class="stats-wrap reveal">
             <ul class="stats" aria-label="At a glance">
@@ -1647,34 +1769,81 @@ html:not(.js) .lab { display: none; }
   <section class="section" id="skills" aria-labelledby="skills-title">
     <div class="container">
       <div class="section-head reveal">
-        <p class="eyebrow">Expertise</p>
-        <h2 class="section-title" id="skills-title">Skills &amp; Proficiency</h2>
+        <p class="eyebrow">Methods &amp; Tools</p>
+        <h2 class="section-title" id="skills-title">Skills &amp; Expertise</h2>
         <span class="title-bar" aria-hidden="true"></span>
       </div>
 
-      <div class="skills-group reveal">
-        <h3 class="group-title"><span class="icon-tile" aria-hidden="true"><svg class="icon"><use href="#i-flask"/></svg></span>Research Skills</h3>
-        <ul class="skill-list">
-          <li><div class="skill-head"><span class="skill-name">Federated &amp; Distributed Learning Systems</span><span class="skill-pct">90%</span></div><div class="bar" aria-hidden="true"><span style="--w:90%"></span></div></li>
-          <li><div class="skill-head"><span class="skill-name">Privacy-Preserving ML (Homomorphic Encryption)</span><span class="skill-pct">85%</span></div><div class="bar" aria-hidden="true"><span style="--w:85%"></span></div></li>
-          <li><div class="skill-head"><span class="skill-name">Explainable &amp; Interpretable AI</span><span class="skill-pct">84%</span></div><div class="bar" aria-hidden="true"><span style="--w:84%"></span></div></li>
-          <li><div class="skill-head"><span class="skill-name">Automated Testing &amp; Program Analysis</span><span class="skill-pct">82%</span></div><div class="bar" aria-hidden="true"><span style="--w:82%"></span></div></li>
-          <li><div class="skill-head"><span class="skill-name">Experimental Design &amp; Benchmarking</span><span class="skill-pct">82%</span></div><div class="bar" aria-hidden="true"><span style="--w:82%"></span></div></li>
-          <li><div class="skill-head"><span class="skill-name">Secure &amp; Scalable AI System Design</span><span class="skill-pct">80%</span></div><div class="bar" aria-hidden="true"><span style="--w:80%"></span></div></li>
-          <li><div class="skill-head"><span class="skill-name">AI for Real-World &amp; Ethical Impact</span><span class="skill-pct">78%</span></div><div class="bar" aria-hidden="true"><span style="--w:78%"></span></div></li>
+      <div class="skills-split">
+        <!-- Research skills: each skill with the work that shows it -->
+        <div class="skills-group reveal">
+        <div class="xp-bar">
+          <h3 class="group-title"><span class="icon-tile" aria-hidden="true"><svg class="icon"><use href="#i-flask"/></svg></span>Research Skills</h3>
+          <p class="xp-hint">Each skill links to the work where I used it</p>
+        </div>
+        <ul class="xp-list">
+          <li class="xp-row">
+            <h4 class="xp-name">Federated &amp; Distributed Learning Systems</h4>
+            <ul class="xp-proof" aria-label="Where this skill is used">
+              <li><a class="proof" href="https://doi.org/10.1016/j.inffus.2023.102004" target="_blank" rel="noopener" title="Information Fusion (Elsevier), IF 17.4"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>Information Fusion<span class="sr-only"> (opens in a new tab)</span></a></li>
+              <li><a class="proof is-pending" href="#research" title="zk-FedMax: verifiable federated aggregation, in progress"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>zk-FedMax · ongoing</a></li>
+              <li><a class="proof" href="https://github.com/RaisulKabir27/Advanced-Data-Fabric-Architecture" target="_blank" rel="noopener" title="Privacy-preserving medical image analysis (GitHub)"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg>Medical imaging code<span class="sr-only"> (opens in a new tab)</span></a></li>
+            </ul>
+          </li>
+          <li class="xp-row">
+            <h4 class="xp-name">Privacy-Preserving ML (Homomorphic Encryption)</h4>
+            <ul class="xp-proof" aria-label="Where this skill is used">
+              <li><a class="proof" href="https://doi.org/10.1016/j.inffus.2023.102004" target="_blank" rel="noopener" title="Information Fusion (Elsevier), IF 17.4"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>Information Fusion<span class="sr-only"> (opens in a new tab)</span></a></li>
+              <li><a class="proof" href="https://github.com/RaisulKabir27/Advanced-Data-Fabric-Architecture" target="_blank" rel="noopener" title="Paillier cryptosystem implemented in Python (GitHub)"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg>Paillier in Python<span class="sr-only"> (opens in a new tab)</span></a></li>
+            </ul>
+          </li>
+          <li class="xp-row">
+            <h4 class="xp-name">Explainable &amp; Interpretable AI</h4>
+            <ul class="xp-proof" aria-label="Where this skill is used">
+              <li><a class="proof" href="https://ieeexplore.ieee.org/document/11022387" target="_blank" rel="noopener" title="27th ICCIT, IEEE, 2024"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>IEEE ICCIT 2024<span class="sr-only"> (opens in a new tab)</span></a></li>
+            </ul>
+          </li>
+          <li class="xp-row">
+            <h4 class="xp-name">Automated Testing &amp; Program Analysis</h4>
+            <ul class="xp-proof" aria-label="Where this skill is used">
+              <li><a class="proof" href="https://github.com/cktan/tomlc17/issues/54" target="_blank" rel="noopener" title="Defect found by my fuzzer, confirmed and fixed upstream (Issue #54)"><svg class="icon" aria-hidden="true"><use href="#i-merge"/></svg>tomlc17 fix<span class="sr-only"> (opens in a new tab)</span></a></li>
+              <li><a class="proof" href="https://github.com/RaisulKabir27/agentic-pbt-targeted-fuzzing-tomlc17" target="_blank" rel="noopener" title="Agentic property-based fuzzing of tomlc17 (GitHub)"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg>Agentic fuzzer<span class="sr-only"> (opens in a new tab)</span></a></li>
+            </ul>
+          </li>
+          <li class="xp-row">
+            <h4 class="xp-name">Experimental Design &amp; Benchmarking</h4>
+            <ul class="xp-proof" aria-label="Where this skill is used">
+              <li><a class="proof is-pending" href="#research" title="Submitted to ACM IMWUT, under review"><svg class="icon" aria-hidden="true"><use href="#i-send"/></svg>IMWUT · in review</a></li>
+              <li><a class="proof" href="https://doi.org/10.1016/j.inffus.2023.102004" target="_blank" rel="noopener" title="Information Fusion (Elsevier), IF 17.4"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>Information Fusion<span class="sr-only"> (opens in a new tab)</span></a></li>
+            </ul>
+          </li>
+          <li class="xp-row">
+            <h4 class="xp-name">Secure &amp; Scalable AI System Design</h4>
+            <ul class="xp-proof" aria-label="Where this skill is used">
+              <li><a class="proof" href="https://github.com/RaisulKabir27/Secure-Discord-Based-Course-Management-Bot" target="_blank" rel="noopener" title="Secure Discord-based course management bot (GitHub)"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg>Course bot<span class="sr-only"> (opens in a new tab)</span></a></li>
+            </ul>
+          </li>
+          <li class="xp-row">
+            <h4 class="xp-name">AI for Real-World &amp; Ethical Impact</h4>
+            <ul class="xp-proof" aria-label="Where this skill is used">
+              <li><a class="proof" href="https://ieeexplore.ieee.org/document/11022387" target="_blank" rel="noopener" title="27th ICCIT, IEEE, 2024"><svg class="icon" aria-hidden="true"><use href="#i-book"/></svg>IEEE ICCIT 2024<span class="sr-only"> (opens in a new tab)</span></a></li>
+              <li><a class="proof is-pending" href="#research" title="Urban heat island study, student research I supervise"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>Urban heat · ongoing</a></li>
+            </ul>
+          </li>
         </ul>
       </div>
 
+      <!-- Technical toolkit: plain lists, no levels -->
       <div class="skills-group reveal">
-        <h3 class="group-title"><span class="icon-tile" aria-hidden="true"><svg class="icon"><use href="#i-code"/></svg></span>Technical / Hard Skills</h3>
-        <ul class="skill-list">
-          <li><div class="skill-head"><span class="skill-name">Python &amp; Scientific Computing</span><span class="skill-pct">92%</span></div><div class="bar" aria-hidden="true"><span style="--w:92%"></span></div></li>
-          <li><div class="skill-head"><span class="skill-name">PyTorch, NumPy, Pandas</span><span class="skill-pct">88%</span></div><div class="bar" aria-hidden="true"><span style="--w:88%"></span></div></li>
-          <li><div class="skill-head"><span class="skill-name">Git, Linux, LaTeX, Android Studio</span><span class="skill-pct">90%</span></div><div class="bar" aria-hidden="true"><span style="--w:90%"></span></div></li>
-          <li><div class="skill-head"><span class="skill-name">Java, C++, C#, Dart, Assembly</span><span class="skill-pct">82%</span></div><div class="bar" aria-hidden="true"><span style="--w:82%"></span></div></li>
-          <li><div class="skill-head"><span class="skill-name">Django, REST APIs, HTML &amp; CSS</span><span class="skill-pct">80%</span></div><div class="bar" aria-hidden="true"><span style="--w:80%"></span></div></li>
-          <li><div class="skill-head"><span class="skill-name">MySQL &amp; MongoDB</span><span class="skill-pct">78%</span></div><div class="bar" aria-hidden="true"><span style="--w:78%"></span></div></li>
-        </ul>
+        <h3 class="group-title"><span class="icon-tile" aria-hidden="true"><svg class="icon"><use href="#i-code"/></svg></span>Technical Toolkit</h3>
+        <dl class="kit">
+          <div class="kit-row"><dt>Languages</dt><dd>Python, Java, C++, C#, Dart, Assembly</dd></div>
+          <div class="kit-row"><dt>Machine learning</dt><dd>PyTorch, NumPy, Pandas, scientific computing</dd></div>
+          <div class="kit-row"><dt>Testing &amp; analysis</dt><dd>Hypothesis, property-based testing, fuzzing, C sanitizers</dd></div>
+          <div class="kit-row"><dt>Web &amp; backend</dt><dd>Django, REST APIs, HTML, CSS</dd></div>
+          <div class="kit-row"><dt>Data &amp; tooling</dt><dd>MySQL, MongoDB, PostgreSQL, Git, Linux, LaTeX, Android Studio</dd></div>
+        </dl>
+      </div>
       </div>
     </div>
   </section>
@@ -2875,5 +3044,63 @@ html:not(.js) .lab { display: none; }
   } catch (e) { /* analytics must never break the page */ }
 })();
 </script>
+
+<script>
+/* ---------- Research Interests: draws each tree's trunk from its icon down to its topics ---------- */
+(function () {
+  var box = document.querySelector('.rx');
+  if (!box || !window.SVGElement) return;
+  var svg = box.querySelector('.rx-wires');
+  var nodes = [].slice.call(box.querySelectorAll('.rx-node'));
+  var NS = 'http://www.w3.org/2000/svg', wires = [], frame = 0;
+  var still = function () {
+    return !document.documentElement.classList.contains('motion') ||
+      (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  };
+  function el(name, attrs) { var e = document.createElementNS(NS, name); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+  function draw() {
+    frame = 0;
+    var b = box.getBoundingClientRect();
+    if (!b.width) return;
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    wires = [];
+    nodes.forEach(function (n, i) {
+      var side = n.closest('.rx-break') ? '.rx-head.rx-break' : '.rx-head.rx-build';
+      var h = box.querySelector(side + ' .rx-hub').getBoundingClientRect(), r = n.getBoundingClientRect();
+      var x = h.left + h.width / 2 - b.left, y0 = h.bottom - b.top, y = r.top + r.height / 2 - b.top, x1 = r.left - b.left, rr = 9;
+      var d = 'M' + x + ' ' + y0 + ' V' + (y - rr) + ' Q' + x + ' ' + y + ' ' + (x + rr) + ' ' + y + ' H' + x1;
+      var p = el('path', { d: d, id: 'rx-w' + i, 'class': 'rx-wire' });
+      svg.appendChild(p); wires.push(p);
+      if (!still()) {   /* a dot that runs from the icon out to the topic */
+        var c = el('circle', { r: 3, 'class': 'rx-pulse', opacity: 0 });
+        var t = (2.4 + (i % 3) * 0.4) + 's', at = (i * 0.5).toFixed(2) + 's';
+        var m = el('animateMotion', { dur: t, begin: at, repeatCount: 'indefinite' });
+        m.appendChild(el('mpath', { href: '#rx-w' + i }));
+        c.appendChild(m);
+        c.appendChild(el('animate', { attributeName: 'opacity', values: '0;1;1;0', keyTimes: '0;0.12;0.85;1', dur: t, begin: at, repeatCount: 'indefinite' }));
+        svg.appendChild(c);
+      }
+    });
+  }
+  function soon() { if (!frame) frame = requestAnimationFrame(draw); }
+
+  /* Hovering a topic lights its branch */
+  nodes.forEach(function (n, i) {
+    n.addEventListener('pointerenter', function () { box.classList.add('is-focus'); n.classList.add('is-hot'); if (wires[i]) wires[i].classList.add('is-hot'); });
+    n.addEventListener('pointerleave', function () { box.classList.remove('is-focus'); n.classList.remove('is-hot'); if (wires[i]) wires[i].classList.remove('is-hot'); });
+  });
+
+  if ('ResizeObserver' in window) new ResizeObserver(soon).observe(box); else window.addEventListener('resize', soon);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(soon);
+  /* Pause the dots while the section is off screen */
+  if ('IntersectionObserver' in window && svg.pauseAnimations) {
+    new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) svg.unpauseAnimations(); else svg.pauseAnimations(); }); }).observe(box);
+  }
+  soon();
+})();
+</script>
+
+
 </body>
 </html>
