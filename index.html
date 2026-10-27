@@ -1419,7 +1419,7 @@ html:not(.js) .lab { display: none; }
             <li class="tl-item reveal"><article class="tl-card">
               <span class="org-mark org-brac" role="img" aria-label="BRAC University"></span>
               <div>
-                <p class="tl-date">Ongoing · Expected 2026</p>
+                <p class="tl-date">Ongoing</p>
                 <h4 class="tl-title">M.Sc. in Computer Science and Engineering</h4>
                 <p class="tl-org">BRAC University</p>
                 <p class="tl-desc">CGPA 3.85 / 4.00 · Expected CGPA 3.96 / 4.00</p>
@@ -1702,6 +1702,14 @@ html:not(.js) .lab { display: none; }
           <p class="project-desc">An agentic framework that generates and refines Hypothesis strategies to test the tomlc17 parser, combining grammar-aware generation, sanitizer-instrumented C harnesses, oracles mined from the test suite and automated triage. In five iterations, for about $0.03 in API cost, it discovered a numeric-literal conformance bug that is now fixed upstream.</p>
           <span class="project-cta"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg>View on GitHub</span>
         </article></li>
+                <li class="reveal" style="--d:.06s"><article class="project-card">
+          <div class="project-top"><span class="project-icon" aria-hidden="true"><svg class="icon"><use href="#i-check-circle"/></svg></span><svg class="icon project-ext" aria-hidden="true"><use href="#i-external"/></svg></div>
+          <span class="project-tag">Neural Network Verification · Floating Point</span>
+          <!-- Embed Link: GitHub repository URL for VerifierProbe -->
+          <h3 class="project-title"><a class="project-link" href="https://github.com/RaisulKabir27/nn-verifier-soundness-probe" target="_blank" rel="noopener">VerifierProbe: Soundness Probe for Neural Network Verifiers<span class="sr-only"> (opens GitHub in a new tab)</span></a></h3>
+          <p class="project-desc">A tool that tests the α,β-CROWN verifier for floating-point soundness gaps. On a network built to sit at the edge of rounding error, its float32 bound certified a region as safe while a real input inside it was misclassified. A float64 re-check confirms the error is pure rounding, an ordinary network shows no gap, and the full verifier still catches the case.</p>
+          <span class="project-cta"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg>View on GitHub</span>
+        </article></li>
         <li class="reveal" style="--d:.12s"><article class="project-card">
           <div class="project-top"><span class="project-icon" aria-hidden="true"><svg class="icon"><use href="#i-bot"/></svg></span><svg class="icon project-ext" aria-hidden="true"><use href="#i-external"/></svg></div>
           <span class="project-tag">Automation · Discord API</span>
@@ -1808,6 +1816,7 @@ html:not(.js) .lab { display: none; }
             <ul class="xp-proof" aria-label="Where this skill is used">
               <li><a class="proof" href="https://github.com/cktan/tomlc17/issues/54" target="_blank" rel="noopener" title="Defect found by my fuzzer, confirmed and fixed upstream (Issue #54)"><svg class="icon" aria-hidden="true"><use href="#i-merge"/></svg>tomlc17 fix<span class="sr-only"> (opens in a new tab)</span></a></li>
               <li><a class="proof" href="https://github.com/RaisulKabir27/agentic-pbt-targeted-fuzzing-tomlc17" target="_blank" rel="noopener" title="Agentic property-based fuzzing of tomlc17 (GitHub)"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg>Agentic fuzzer<span class="sr-only"> (opens in a new tab)</span></a></li>
+                            <li><a class="proof" href="https://github.com/RaisulKabir27/nn-verifier-soundness-probe" target="_blank" rel="noopener" title="VerifierProbe: testing the α,β-CROWN verifier for floating-point soundness gaps (GitHub)"><svg class="icon" aria-hidden="true"><use href="#i-github"/></svg>VerifierProbe<span class="sr-only"> (opens in a new tab)</span></a></li>
             </ul>
           </li>
           <li class="xp-row">
@@ -1839,7 +1848,7 @@ html:not(.js) .lab { display: none; }
         <dl class="kit">
           <div class="kit-row"><dt>Languages</dt><dd>Python, Java, C++, C#, Dart, Assembly</dd></div>
           <div class="kit-row"><dt>Machine learning</dt><dd>PyTorch, NumPy, Pandas, scientific computing</dd></div>
-          <div class="kit-row"><dt>Testing &amp; analysis</dt><dd>Hypothesis, property-based testing, fuzzing, C sanitizers</dd></div>
+          <div class="kit-row"><dt>Testing &amp; analysis</dt><dd>Hypothesis, property-based testing, fuzzing, C sanitizers, pytest, α,β-CROWN (auto_LiRPA)</dd></div>
           <div class="kit-row"><dt>Web &amp; backend</dt><dd>Django, REST APIs, HTML, CSS</dd></div>
           <div class="kit-row"><dt>Data &amp; tooling</dt><dd>MySQL, MongoDB, PostgreSQL, Git, Linux, LaTeX, Android Studio</dd></div>
         </dl>
