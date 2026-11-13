@@ -61,7 +61,7 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html RaisulKabirNews_CV.pdf .nojekyll _site/
-          cp -r assets data _site/
+          cp -r assets data pipelines _site/
 
       - if: github.event_name != 'schedule' || steps.save.outputs.changed == 'true'
         uses: actions/configure-pages@v5
