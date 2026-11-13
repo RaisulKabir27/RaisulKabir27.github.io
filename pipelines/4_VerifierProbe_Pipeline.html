@@ -1,0 +1,330 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>VerifierProbe Pipeline</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one schematic that scales to fit the screen; snake-shaped flow, step mode spotlights one stage. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --ink:#15202b; --muted:#566273; --line:#cfd6df; --edge:#7a8594;
+  --k-setup:#5d6b7e; --k-build:#4b47d6; --k-gate:#a8590a; --k-verify:#1d68a8; --k-attack:#b0306a; --k-probe:#167a3c; --k-out:#0b7268;
+  --sans:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0e1318; --surface:#151c24; --ink:#e6edf3; --muted:#9aa6b4; --line:#2b3642; --edge:#7a8796;
+  --k-setup:#98a6b8; --k-build:#9d9bff; --k-gate:#f0a54d; --k-verify:#5eaae8; --k-attack:#f07aa8; --k-probe:#4fd27f; --k-out:#33cdb8; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0e1318; --surface:#151c24; --ink:#e6edf3; --muted:#9aa6b4; --line:#2b3642; --edge:#7a8796;
+  --k-setup:#98a6b8; --k-build:#9d9bff; --k-gate:#f0a54d; --k-verify:#5eaae8; --k-attack:#f07aa8; --k-probe:#4fd27f; --k-out:#33cdb8; color-scheme:dark }
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden}
+.app{height:100%;display:flex;flex-direction:column;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 12px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 20px;margin-bottom:8px}
+h1{margin:0;font-size:clamp(18px,2.1vw,28px);line-height:1.15;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+.sub{margin:2px 0 0;color:var(--muted);font-size:clamp(12px,1.05vw,15px);max-width:95ch}
+.ctrl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn{font:inherit;font-size:13px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 11px;cursor:pointer}
+.btn:hover{border-color:var(--edge)}
+.btn:focus-visible{outline:2px solid var(--k-build);outline-offset:2px}
+.stepno{font-family:var(--mono);font-size:12px;color:var(--muted);min-width:60px;text-align:center}
+.fitbox{flex:1;min-height:0;position:relative;overflow:auto}
+.sizer{position:relative;margin:0 auto}
+.stage{position:absolute;left:0;top:0;width:1600px;height:1150px;transform-origin:0 0}
+svg.edges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.node{position:absolute;border-radius:10px;border:1.5px solid color-mix(in srgb,var(--k) 60%,var(--line));background:color-mix(in srgb,var(--k) 8%,var(--surface));padding:11px 14px;transition:opacity .25s,box-shadow .25s}
+.node .nh{display:flex;align-items:baseline;gap:8px}
+.node .num{font:600 14px/1 var(--mono);color:var(--k)}
+.node .nt{font-weight:600;font-size:18px;line-height:1.2}
+.node .nf{font:500 12.5px/1.3 var(--mono);color:var(--k);margin:3px 0 6px}
+.node ul{margin:0;padding-left:17px;font-size:14px;line-height:1.38}
+.node li::marker{color:var(--k)}
+.node.small{padding:9px 11px}
+.node.small .nt{font-size:15px}
+.node.small ul{font-size:12.8px;padding-left:15px}
+.node.small .nf{font-size:11.5px;margin-bottom:4px}
+.k-setup{--k:var(--k-setup)}.k-build{--k:var(--k-build)}.k-gate{--k:var(--k-gate)}.k-verify{--k:var(--k-verify)}.k-attack{--k:var(--k-attack)}.k-probe{--k:var(--k-probe)}.k-out{--k:var(--k-out)}
+.group{position:absolute;border-radius:14px;border:1.75px dashed color-mix(in srgb,var(--k) 65%,var(--line));background:color-mix(in srgb,var(--k) 5%,transparent);transition:opacity .25s,box-shadow .25s}
+.group .gh{position:absolute;left:18px;top:12px;display:flex;align-items:baseline;gap:8px}
+.group .gh .nt{font-weight:600;font-size:18px}
+.group .gh .nf{font:500 12.5px var(--mono);color:var(--k)}
+.elabel{position:absolute;transform:translate(-50%,-50%);font-size:12.5px;font-weight:500;background:var(--surface);color:var(--muted);padding:2px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap;transition:opacity .25s}
+.on{box-shadow:0 0 0 3px var(--k)}
+.dim{opacity:.16}
+.res{margin-top:6px;font:500 12.5px/1.35 var(--mono)}
+.res .hl{background:color-mix(in srgb,var(--k-probe) 16%,transparent);border-radius:3px;padding:1px 4px;font-weight:600;color:var(--ink)}
+.node.small .res{font-size:11.8px}
+.node ul.dec{list-style:none;padding:0;margin-top:7px;padding-top:6px;border-top:1px dashed color-mix(in srgb,var(--k) 40%,var(--line));font-size:13px;line-height:1.35}
+.node ul.dec li{position:relative;padding-left:16px;margin:2px 0}
+.node ul.dec li::before{content:"";position:absolute;left:2px;top:.42em;width:7px;height:7px;background:var(--k-gate);transform:rotate(45deg)}
+.node.small ul.dec{font-size:12px;margin-top:5px;padding-top:4px}
+.legend{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin-right:6px}
+.legend i{width:8px;height:8px;background:var(--k-gate);transform:rotate(45deg);display:inline-block}
+.legend .rs{font:600 11.5px var(--mono);background:color-mix(in srgb,var(--k-probe) 16%,transparent);color:var(--ink);border-radius:3px;padding:1px 5px}
+.zoom{display:inline-flex;gap:0}
+.zoom .btn{border-radius:0;margin-left:-1px;min-width:34px}
+.zoom .btn:first-child{border-radius:6px 0 0 6px;margin-left:0}
+.zoom .btn:last-child{border-radius:0 6px 6px 0}
+.zoom .zl{font-family:var(--mono);font-size:12px;min-width:58px}
+.fitbox.pan{cursor:grab}
+.fitbox.panning{cursor:grabbing;user-select:none}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="app">
+  <header>
+    <div>
+      <h1>VerifierProbe Pipeline for α,β-CROWN</h1>
+    </div>
+    <div class="ctrl" role="toolbar" aria-label="Presentation controls">
+      <span class="legend"><i></i>decision: if → then</span>
+      <span class="legend"><span class="rs">result</span></span>
+      <button class="btn" id="prev" type="button" aria-label="Previous stage">◀</button>
+      <span class="stepno" id="stepno">overview</span>
+      <button class="btn" id="next" type="button" aria-label="Next stage">▶</button>
+      <button class="btn" id="all" type="button">Show all</button>
+      <span class="zoom" role="group" aria-label="Zoom">
+        <button class="btn" id="zout" type="button" aria-label="Zoom out">−</button>
+        <button class="btn zl" id="zfit" type="button" title="Reset to fit the screen">100%</button>
+        <button class="btn" id="zin" type="button" aria-label="Zoom in">+</button>
+      </span>
+      <button class="btn" id="fs" type="button">Full screen</button>
+    </div>
+  </header>
+  <div class="fitbox" id="fitbox"><div class="sizer" id="sizer"><div class="stage" id="stage"></div></div></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const W=1600,H=1150;
+const stage=document.getElementById("stage");
+
+// ----- nodes: [id, kind, x, y, w, h, num, title, file, bullets, small?, decisions, result]
+const N=[
+ ["inputs","setup",40,110,220,270,"","Inputs","verifier.py · DEFAULT_CONFIG",
+   ["auto_LiRPA, CROWN, float32","50 inputs → 64 ReLU → 2 classes","Box: ε = 0.05 around 0, label 0","Seed 0"],false,
+   ["CROWN-Optimized → α-CROWN"],""],
+ ["build","build",300,110,250,270,"1","Build the network","models.py · build_fp_adversarial_net",
+   ["W1 random / √50, hidden bias 10","Output rows: big·a ± d/2 (big = 12500)","Each logit is huge; their difference d is tiny"],false,
+   [],"logits ≈ 5.8 × 10⁷ (ulp = 4)"],
+ ["preact","gate",590,110,240,270,"2","Prove every ReLU is on","calibration.py · exact_preact_bounds",
+   ["lower = b + W·c − ε‖Wᵢ‖₁ (float64)","Exact for one linear layer on a box"],false,
+   ["min > 0 → net is affine on the box","min ≤ 0 → stop (raise hbias)"],"min +9.6535 (neuron 4)"],
+ ["bisect","build",870,110,250,270,"3","Find both boundaries","calibration.py · _bisect_root",
+   ["Safe: CROWN lb(bias) = 0","Adversarial: forward margin at corner = 0","Bisect until τ1 − τ0 < 1e-7"],false,
+   ["no sign change → widen bracket (≤ 40×)"],"safe −2.9725215 · adv −2.0000001"],
+ ["gate","gate",1160,110,400,270,"4","Calibration gate","calibration.py · calibrate_output_bias",
+   ["fp_gap = adv − safe: window width (not τ1 − τ0)","Output bias = middle of the window","Check: CROWN lb ≥ 0 > forward margin"],false,
+   ["fp_gap ≤ 0 → near-miss bias just on the adversarial side","not verified → retry with next big (5000, 17500, …)","every big fails → stop with an error"],"fp_gap +0.9725 → bias −2.48626"],
+
+ ["certify","verify",1160,440,400,230,"5","Certify with CROWN","verifier.py · ABCrownVerifier.certify",
+   ["C rows: e_true − e_j (one per rival class)","BoundedModule + L∞ box (PerturbationLpNorm)","compute_bounds(method=\"CROWN\", C=C)"],false,
+   ["margin_lb ≥ safe_tol (0) → safe, else unsafe-or-unknown"],"margin_lb +0.48626 → safe"],
+ ["corner","attack",830,440,290,230,"6","Start at the corner","attacker.py · run, step 2",
+   ["Gradient of the margin at the center","corner = c − ε·sign(grad), clamped","The corner CROWN's bound points at"],false,
+   [],"single-input margin −4.0"],
+ ["climb","attack",440,440,350,230,"7","Float32 hill-climb","attacker.py · run, step 3",
+   ["128 random probes per round, radius shrinks","Batched pass proposes the best probe","Single-input pass decides"],false,
+   ["single margin < best → accept the move","4000 evaluations used → stop"],"−24.0 at step 24"],
+ ["verdict","attack",40,440,360,230,"8","Violation check","attacker.py · run, step 4",
+   ["Logits 57,948,988 vs 57,949,012 → class 1","Same input rerun in float64"],false,
+   ["safe ∧ margin < 0 ∧ argmax flips → violation","float64 ≥ 0 → pure float32 gap","no violation → return closest near-miss"],"violation True · float64 +0.5591"],
+
+ ["layers","probe",60,790,195,300,"a","Per-layer bounds","compute_bounds, no C",
+   ["node.lower / node.upper","Parameter nodes skipped"],true,
+   ["lower < 0 < upper → unstable ReLU","> 20,000 values → min/max/head summary"],"/0 [1,50] · /input [1,64] · /7 [1,2]"],
+ ["linear","probe",275,790,210,300,"b","Output linear bounds","compute_bounds(C, return_A)",
+   ["lA, uA: [n_spec, n_in]","lbias, ubias: [n_spec]","lb = lbias + Σ lA·(chosen corner)"],true,
+   [],"lA shape [1, 1, 50]"],
+ ["alpha","probe",505,790,180,300,"c","α slopes","BoundRelu.alpha",
+   ["Shapes of the optimisable ReLU slopes","Filled only by CROWN-Optimized"],true,
+   [],"{} for plain CROWN"],
+ ["lb","probe",705,790,175,300,"d","Certified margin","per spec",
+   ["CROWN lower bound for the box around adv_x","Same ε = 0.05"],true,
+   [],"lb +0.2699"],
+
+ ["outputs","out",940,740,290,380,"10","Outputs","Attacker.run · Prober.dump",
+   ["adv_x: the violating input [1, 50]","atk_logs: verifier_claim, model_real_output, search, float64_control","trace: quickstart_trace.json, schema 1.0","TRACE_SCHEMA documents every field"],false,
+   [],"soundness_violation: true"],
+ ["checks","out",1270,740,290,380,"11","Control and tests","run_experiment.py · tests/",
+   ["Natural net: seed 1, ε 0.02, ordinary weights","6 pytest tests: toy safe / unsafe, schema, pre-ReLU, calibration, end-to-end","Scope: the CROWN bound step; the full solver's PGD flags unsafe first"],false,
+   ["constructed True + natural False → claim holds"],"natural: lb +1.5465 · no violation"],
+];
+const GROUPS=[["probeg","probe",40,740,860,380,"9","Prober.dump(model, adv_x)","prober.py · read-only",["layers","linear","alpha","lb"]]];
+
+// ----- edges: [stepIds, points, type, label, lx, ly, noarrow]
+const E=[
+ [["inputs","build"],[[260,245],[300,245]],"main"],
+ [["build","preact"],[[550,245],[590,245]],"main"],
+ [["preact","bisect"],[[830,245],[870,245]],"main"],
+ [["bisect","gate"],[[1120,245],[1160,245]],"main"],
+ [["gate","build"],[[1360,110],[1360,82],[425,82],[425,110]],"retry","not verified → next big",890,82],
+ [["gate","certify"],[[1360,380],[1360,440]],"main","straddle verified",1450,410],
+ [["certify","corner"],[[1160,555],[1120,555]],"main"],
+ [["corner","climb"],[[830,555],[790,555]],"main"],
+ [["climb"],[[720,440],[720,414],[520,414],[520,440]],"loop","next round",620,414],
+ [["climb","verdict"],[[440,555],[400,555]],"main"],
+ [["verdict","probeg","outputs"],[[220,670],[220,705]],"data",null,0,0,true],
+ [["verdict","probeg","outputs"],[[220,705],[1085,705]],"data","adv_x · atk_logs",640,705,true],
+ [["verdict","probeg"],[[220,705],[220,740]],"data"],
+ [["verdict","outputs"],[[1085,705],[1085,740]],"data"],
+ [["probeg"],[[255,940],[275,940]],"probe"],
+ [["probeg"],[[485,940],[505,940]],"probe"],
+ [["probeg"],[[685,940],[705,940]],"probe"],
+ [["probeg","outputs"],[[900,930],[940,930]],"probe","trace",920,900],
+ [["outputs","checks"],[[1230,930],[1270,930]],"main"],
+];
+
+const STEPS=[
+ ["inputs"],["build"],["preact"],["bisect"],["gate"],["certify"],["corner"],["climb"],["verdict"],
+ ["probeg"],["outputs"],["checks"]
+];
+
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const KC={setup:"k-setup",build:"k-build",gate:"k-gate",verify:"k-verify",attack:"k-attack",probe:"k-probe",out:"k-out"};
+const els={}; const CHILD={};
+
+for(const [id,k,x,y,w,h,num,t,f,kids] of GROUPS){
+  const d=document.createElement("div"); d.className="group "+KC[k]; d.dataset.id=id;
+  Object.assign(d.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px"});
+  d.innerHTML=`<div class="gh"><span style="font:600 14px var(--mono);color:var(--k)">${num}</span><span class="nt">${esc(t)}</span><span class="nf">${esc(f)}</span></div>`;
+  stage.appendChild(d); els[id]=d; CHILD[id]=kids;
+}
+const kidSet=new Set(Object.values(CHILD).flat());
+
+const NS="http://www.w3.org/2000/svg";
+const svg=document.createElementNS(NS,"svg"); svg.setAttribute("class","edges");
+svg.setAttribute("width",W); svg.setAttribute("height",H); svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+const COL={main:"var(--edge)",retry:"var(--k-gate)",data:"var(--k-verify)",loop:"var(--k-attack)",probe:"var(--k-probe)"};
+const defs=document.createElementNS(NS,"defs");
+for(const [k,c] of Object.entries(COL)){
+  const m=document.createElementNS(NS,"marker");
+  m.setAttribute("id","a-"+k); m.setAttribute("viewBox","0 0 10 10"); m.setAttribute("refX","9"); m.setAttribute("refY","5");
+  m.setAttribute("markerWidth","7"); m.setAttribute("markerHeight","7"); m.setAttribute("orient","auto-start-reverse");
+  const p=document.createElementNS(NS,"path"); p.setAttribute("d","M0 0L10 5L0 10z"); p.setAttribute("fill",c); m.appendChild(p); defs.appendChild(m);
+}
+svg.appendChild(defs);
+const edgeEls=[];
+for(const [ids,pts,t,lab,lx,ly,noarrow] of E){
+  const p=document.createElementNS(NS,"path");
+  p.setAttribute("d","M"+pts.map(q=>q.join(" ")).join(" L"));
+  p.setAttribute("fill","none"); p.setAttribute("stroke",COL[t]);
+  p.setAttribute("stroke-width",t==="main"?"1.8":"2.2");
+  if(t==="retry"||t==="loop") p.setAttribute("stroke-dasharray","7 5");
+  if(!noarrow) p.setAttribute("marker-end",`url(#a-${t})`);
+  p.style.transition="opacity .25s";
+  svg.appendChild(p); edgeEls.push([ids,p]);
+}
+stage.appendChild(svg);
+
+for(const [id,k,x,y,w,h,num,t,f,bul,small,dec,res] of N){
+  const d=document.createElement("div"); d.className="node "+KC[k]+(small?" small":""); d.dataset.id=id;
+  Object.assign(d.style,{left:x+"px",top:y+"px",width:w+"px",height:h+"px"});
+  let inner=`<div class="nh">${num?`<span class="num">${num}</span>`:""}<span class="nt">${esc(t)}</span></div><div class="nf">${esc(f)}</div>`;
+  if(bul.length) inner+=`<ul>${bul.map(b=>`<li>${esc(b)}</li>`).join("")}</ul>`;
+  if(res) inner+=`<div class="res"><span class="hl">${esc(res)}</span></div>`;
+  if(dec&&dec.length) inner+=`<ul class="dec">${dec.map(b=>`<li>${esc(b)}</li>`).join("")}</ul>`;
+  d.innerHTML=inner; stage.appendChild(d); els[id]=d;
+}
+
+const labels=[];
+for(const [ids,pts,t,lab,lx,ly] of E){
+  if(!lab) continue;
+  const s=document.createElement("span"); s.className="elabel"; s.style.left=lx+"px"; s.style.top=ly+"px"; s.textContent=lab;
+  stage.appendChild(s); labels.push([ids,s]);
+}
+
+// ----- fit to screen
+const fitbox=document.getElementById("fitbox"), sizer=document.getElementById("sizer");
+const ZMIN=1, ZMAX=4;
+let zoom=1, scaleNow=1;
+const zlab=document.getElementById("zfit");
+function base(){ return Math.max(.42,Math.min(fitbox.clientWidth/W,fitbox.clientHeight/H)); }
+// fx,fy: point in the viewport (px) that should stay put while zooming
+function fit(fx,fy){
+  const old=scaleNow;
+  if(fx===undefined){ fx=fitbox.clientWidth/2; fy=fitbox.clientHeight/2; }
+  const sx=(fitbox.scrollLeft+fx-sizer.offsetLeft)/old, sy=(fitbox.scrollTop+fy)/old;
+  const z=base()*zoom; scaleNow=z;
+  stage.style.transform=`scale(${z})`; sizer.style.width=W*z+"px"; sizer.style.height=H*z+"px";
+  fitbox.scrollLeft=sx*z+sizer.offsetLeft-fx; fitbox.scrollTop=sy*z-fy;
+  zlab.textContent=Math.round(zoom*100)+"%";
+  fitbox.classList.toggle("pan",zoom>1);
+}
+function setZoom(z,fx,fy){ zoom=Math.min(ZMAX,Math.max(ZMIN,Math.round(z*100)/100)); fit(fx,fy); }
+document.getElementById("zin").onclick=()=>setZoom(zoom*1.25);
+document.getElementById("zout").onclick=()=>setZoom(zoom/1.25);
+zlab.onclick=()=>setZoom(1);
+fitbox.addEventListener("wheel",e=>{
+  if(!(e.ctrlKey||e.metaKey)) return;
+  e.preventDefault();
+  const r=fitbox.getBoundingClientRect();
+  setZoom(zoom*(e.deltaY<0?1.12:1/1.12),e.clientX-r.left,e.clientY-r.top);
+},{passive:false});
+// drag to pan when zoomed in
+let drag=null;
+fitbox.addEventListener("pointerdown",e=>{
+  if(zoom<=1||e.button!==0||e.pointerType==="touch") return;
+  drag={x:e.clientX,y:e.clientY,l:fitbox.scrollLeft,t:fitbox.scrollTop};
+  fitbox.classList.add("panning"); fitbox.setPointerCapture(e.pointerId);
+});
+fitbox.addEventListener("pointermove",e=>{
+  if(!drag) return;
+  fitbox.scrollLeft=drag.l-(e.clientX-drag.x); fitbox.scrollTop=drag.t-(e.clientY-drag.y);
+});
+const endDrag=()=>{ drag=null; fitbox.classList.remove("panning"); };
+fitbox.addEventListener("pointerup",endDrag); fitbox.addEventListener("pointercancel",endDrag);
+addEventListener("resize",()=>fit()); fit();
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(fit);
+
+// ----- step mode
+let cur=-1;
+const stepno=document.getElementById("stepno");
+function show(i){
+  cur=i;
+  if(i<0){
+    Object.values(els).forEach(e=>e.classList.remove("dim","on"));
+    edgeEls.forEach(([,p])=>p.style.opacity=""); labels.forEach(([,s])=>s.style.opacity="");
+    stepno.textContent="overview"; return;
+  }
+  const act=new Set(STEPS[i]);
+  const lit=new Set(act); for(const g of act) (CHILD[g]||[]).forEach(c=>lit.add(c));
+  for(const [id,e] of Object.entries(els)){
+    const on=lit.has(id);
+    e.classList.toggle("dim",!on); e.classList.toggle("on",on&&!kidSet.has(id));
+  }
+  const rel=ids=>ids.some(x=>act.has(x));
+  edgeEls.forEach(([ids,p])=>p.style.opacity=rel(ids)?"1":".12");
+  labels.forEach(([ids,s])=>s.style.opacity=rel(ids)?"1":".12");
+  stepno.textContent=`stage ${i+1} / ${STEPS.length}`;
+  // when zoomed in, bring the active stage to the middle of the view
+  if(zoom>1){
+    const e=els[STEPS[i][0]];
+    const cx=(e.offsetLeft+e.offsetWidth/2)*scaleNow+sizer.offsetLeft, cy=(e.offsetTop+e.offsetHeight/2)*scaleNow;
+    fitbox.scrollTo({left:cx-fitbox.clientWidth/2,top:cy-fitbox.clientHeight/2,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+  }
+}
+document.getElementById("next").onclick=()=>show(Math.min(STEPS.length-1,cur+1));
+document.getElementById("prev").onclick=()=>show(Math.max(-1,cur-1));
+document.getElementById("all").onclick=()=>show(-1);
+addEventListener("keydown",e=>{
+  if(e.key==="ArrowRight"||e.key==="PageDown"||e.key===" "){e.preventDefault();show(Math.min(STEPS.length-1,cur+1));}
+  else if(e.key==="ArrowLeft"||e.key==="PageUp"){e.preventDefault();show(Math.max(-1,cur-1));}
+  else if(e.key==="Escape"){show(-1);}
+  else if(e.key==="+"||e.key==="="){e.preventDefault();setZoom(zoom*1.25);}
+  else if(e.key==="-"||e.key==="_"){e.preventDefault();setZoom(zoom/1.25);}
+  else if(e.key==="0"){e.preventDefault();setZoom(1);}
+});
+document.getElementById("fs").onclick=()=>{
+  try{
+    const p=document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen();
+    if(p&&p.catch) p.catch(()=>{});
+  }catch(_){}
+};
+document.addEventListener("fullscreenchange",()=>setTimeout(()=>fit(),60));
+})();
+</script>
+
+</body></html>
