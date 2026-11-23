@@ -2,13 +2,13 @@
    .github/workflows/deploy.yml; a failed fetch never overwrites it, so you can
    also set "citations" by hand. */
 window.SCHOLAR_STATS = {
-  "citations": 81,
+  "citations": 82,
   "h_index": 2,
   "i10_index": 1,
   "publications": [
     {
       "title": "An advanced data fabric architecture leveraging homomorphic encryption and federated learning",
-      "citations": 78
+      "citations": 79
     },
     {
       "title": "Interpretable Deep Learning Approaches for Reliable GI Image Classification: A Study with the HyperKvasir Dataset",
@@ -16,6 +16,6 @@ window.SCHOLAR_STATS = {
     }
   ],
   "source": "Google Scholar profile",
-  "updated": "2026-11-15",
+  "updated": "2026-11-23",
   "profile": "https://scholar.google.com/citations?user=ufPe9c8AAAAJ&hl=en"
 };
